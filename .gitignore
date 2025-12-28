@@ -1,0 +1,8 @@
+
+# Datasets (too large for GitHub)
+datasets/
+*.csv
+
+# Large datasets
+datasets/
+*.csv
