@@ -122,47 +122,78 @@ def plot_embeddings(model, dataloader, num_classes, classes, device,
     plt.show()
 
 
-def plot_training_comparison(history_nll, history_dnll, save_path=None):
-    """Plot training curves comparing NLLLoss vs DNLLLoss.
+def plot_training_comparison(history_nll=None, history_dnll=None, history_softmax=None, save_path=None):
+    """Plot training curves comparing NLLLoss vs DNLLLoss vs Softmax.
     
     Args:
         history_nll: Dict with 'train_acc', 'val_acc' for NLLLoss training
         history_dnll: Dict with 'train_acc', 'val_acc' for DNLLLoss training
+        history_softmax: Dict with 'train_acc', 'val_acc' for Softmax training
         save_path: Path to save figure
     """
+    # Collect non-None histories
+    histories = {}
+    if history_nll is not None:
+        histories['NLLLoss'] = history_nll
+    if history_dnll is not None:
+        histories['DNLLLoss'] = history_dnll
+    if history_softmax is not None:
+        histories['Softmax (CE)'] = history_softmax
+    
+    if len(histories) < 2:
+        print("Need at least 2 histories to compare")
+        return
+    
     sns.set_style("whitegrid")
     sns.set_context("notebook", font_scale=1.1)
     plt.rcParams['figure.facecolor'] = 'white'
     
     fig, axes = plt.subplots(1, 2, figsize=(14, 5))
     
-    epochs_nl = np.arange(1, len(history_nll['train_acc']) + 1)
-    epochs_lda = np.arange(1, len(history_dnll['train_acc']) + 1)
+    # Color palette
+    colors = {
+        'NLLLoss': '#1f77b4',      # Blue
+        'DNLLLoss': '#ff7f0e',     # Orange
+        'Softmax (CE)': '#2ca02c'  # Green
+    }
     
-    NLL_color = '#1f77b4'   # Blue
-    DNLL_color = '#ff7f0e'  # Orange
+    linestyles = {
+        'NLLLoss': '-',
+        'DNLLLoss': '--',
+        'Softmax (CE)': '-.'
+    }
     
     # Plot 1: Training Accuracies
     ax1 = axes[0]
-    ax1.plot(epochs_nl, history_nll['train_acc'], linewidth=2.5, 
-             label='NLLLoss', color=NLL_color, alpha=0.9)
-    ax1.plot(epochs_lda, history_dnll['train_acc'], linewidth=2.5, 
-             label='DNLLLoss', color=DNLL_color, linestyle='--', alpha=0.9)
+    for name, history in histories.items():
+        epochs = np.arange(1, len(history['train_acc']) + 1)
+        ax1.plot(epochs, history['train_acc'], 
+                 linewidth=2.5, 
+                 label=name, 
+                 color=colors[name], 
+                 linestyle=linestyles[name],
+                 alpha=0.9)
+    
     ax1.set_xlabel('Epoch', fontsize=12)
     ax1.set_ylabel('Accuracy', fontsize=12)
-    ax1.set_title('NLLLoss vs DNLLLoss — Train', fontsize=13, fontweight='normal')
+    ax1.set_title('Loss Comparison — Train', fontsize=13, fontweight='normal')
     ax1.legend(loc='lower right', frameon=True, fontsize=10)
     ax1.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     
     # Plot 2: Validation Accuracies
     ax2 = axes[1]
-    ax2.plot(epochs_nl, history_nll['val_acc'], linewidth=2.5, 
-             label='NLLLoss', color=NLL_color, alpha=0.9)
-    ax2.plot(epochs_lda, history_dnll['val_acc'], linewidth=2.5, 
-             label='DNLLLoss', color=DNLL_color, linestyle='--', alpha=0.9)
+    for name, history in histories.items():
+        epochs = np.arange(1, len(history['val_acc']) + 1)
+        ax2.plot(epochs, history['val_acc'], 
+                 linewidth=2.5, 
+                 label=name, 
+                 color=colors[name], 
+                 linestyle=linestyles[name],
+                 alpha=0.9)
+    
     ax2.set_xlabel('Epoch', fontsize=12)
     ax2.set_ylabel('Accuracy', fontsize=12)
-    ax2.set_title('NLLLoss vs DNLLLoss — Test', fontsize=13, fontweight='normal')
+    ax2.set_title('Loss Comparison — Test', fontsize=13, fontweight='normal')
     ax2.legend(loc='lower right', frameon=True, fontsize=10)
     ax2.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     
@@ -178,8 +209,8 @@ def plot_training_comparison(history_nll, history_dnll, save_path=None):
     print("\n" + "=" * 50)
     print("Final Results:")
     print("=" * 50)
-    print(f"NLLLoss  - Train: {history_nll['train_acc'][-1]:.4f}, Val: {history_nll['val_acc'][-1]:.4f}")
-    print(f"DNLLLoss - Train: {history_dnll['train_acc'][-1]:.4f}, Val: {history_dnll['val_acc'][-1]:.4f}")
+    for name, history in histories.items():
+        print(f"{name:15s} - Train: {history['train_acc'][-1]:.4f}, Val: {history['val_acc'][-1]:.4f}")
 
 
 def get_device():

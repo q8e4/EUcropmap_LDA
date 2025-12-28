@@ -2,9 +2,10 @@
 Main training script for Crop Classification with Deep LDA.
 
 Usage:
-    python train.py                    # Train both models
+    python train.py                    # Train all models
     python train.py --model dnll       # Train only DNLLLoss model
     python train.py --model nll        # Train only NLLLoss model
+    python train.py --model softmax    # Train only Softmax (CrossEntropy) model
     python train.py --epochs 20        # Custom epochs
 """
 
@@ -23,8 +24,8 @@ from src.lda import TrainableLDAHead, DNLLLoss
 
 def parse_args():
     parser = argparse.ArgumentParser(description='Train Deep LDA for crop classification')
-    parser.add_argument('--model', type=str, default='both', choices=['both', 'dnll', 'nll'],
-                        help='Which model to train: dnll, nll, or both')
+    parser.add_argument('--model', type=str, default='all', choices=['all', 'dnll', 'nll', 'softmax'],
+                        help='Which model to train: dnll, nll, softmax, or all')
     parser.add_argument('--epochs', type=int, default=None,
                         help='Number of training epochs')
     parser.add_argument('--batch_size', type=int, default=None,
@@ -84,9 +85,10 @@ def main():
     
     history_dnll = None
     history_nll = None
+    history_softmax = None
     
     # Train DNLLLoss model
-    if args.model in ['both', 'dnll']:
+    if args.model in ['all', 'dnll']:
         print("\n" + "=" * 50)
         print("Training with DNLLLoss")
         print("=" * 50)
@@ -128,7 +130,7 @@ def main():
             )
     
     # Train NLLLoss model
-    if args.model in ['both', 'nll']:
+    if args.model in ['all', 'nll']:
         print("\n" + "=" * 50)
         print("Training with NLLLoss")
         print("=" * 50)
@@ -169,12 +171,58 @@ def main():
                 save_path=cfg.plot_dir / "NLLLoss_embeddings.png"
             )
     
-    # Comparison plot
-    if args.model == 'both' and not args.no_plot:
-        plot_training_comparison(
-            history_nll, history_dnll,
-            save_path=cfg.plot_dir / "accuracy_comparison.png"
+    # Train Softmax (CrossEntropy) model
+    if args.model in ['all', 'softmax']:
+        print("\n" + "=" * 50)
+        print("Training with Softmax (CrossEntropyLoss)")
+        print("=" * 50)
+        
+        # No LDA head for softmax - just encoder + linear output
+        model_softmax = create_model(
+            num_classes=num_classes,
+            input_dim=input_dim,
+            lda_head=None,  # No LDA head
+            hidden_dims=cfg.hidden_dims,
+            dropout=cfg.dropout,
+            device=device
         )
+        
+        optimizer = torch.optim.Adam(model_softmax.encoder.parameters(), lr=lr)
+        loss_fn = nn.CrossEntropyLoss()
+        
+        history_softmax = train(
+            model_softmax, train_loader, test_loader,
+            loss_fn, optimizer, epochs, device,
+            checkpoint_dir=cfg.checkpoint_dir,
+            model_name="Softmax_CrossEntropy"
+        )
+        
+        plot_confusion_matrix(
+            model_softmax, 
+            test_loader, 
+            train_dataset.classes, 
+            device,
+            save_path=cfg.plot_dir / "confusion_matrix_softmax.png"
+        )
+
+        # Plot embeddings
+        if not args.no_plot:
+            plot_embeddings(
+                model_softmax, train_loader, num_classes,
+                train_dataset.classes, device,
+                save_path=cfg.plot_dir / "Softmax_embeddings.png"
+            )
+    
+    # Comparison plot (only if we have at least 2 histories)
+    if not args.no_plot:
+        num_trained = sum(h is not None for h in [history_nll, history_dnll, history_softmax])
+        if num_trained >= 2:
+            plot_training_comparison(
+                history_nll=history_nll,
+                history_dnll=history_dnll,
+                history_softmax=history_softmax,
+                save_path=cfg.plot_dir / "accuracy_comparison.png"
+            )
 
     
 # After training

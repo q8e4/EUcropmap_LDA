@@ -53,10 +53,11 @@ pip install -r requirements.txt
 ### Basic Training
 
 ```bash
-# Train both DNLLLoss and NLLLoss models
+# Train all models
 python train.py
 
 # Train only one model
+python train.py --model softmax
 python train.py --model dnll
 python train.py --model nll
 ```
