@@ -40,8 +40,6 @@ Place your `LU22_tabular.csv` file in the `datasets/` folder. The CSV should hav
 3. Run the export cells to download the tabular data to Google Drive
 4. Move the exported CSV to `datasets/`
 
-The notebook extracts features from the [EU Crop Map](https://developers.google.com/earth-engine/datasets/catalog/JRC_D5_EUCROPMAP_V1) dataset using Sentinel-1/Sentinel-2 derived features.
-
 ## Installation
 
 ```bash
