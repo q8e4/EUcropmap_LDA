@@ -185,3 +185,17 @@ In the EU‑CropMap‑2022 scheme, the “major” (Level‑1) layer contains se
 
 
 Thus, while the Level‑1 (major) layer has seven broad categories, the full Level‑2 classification includes those seven plus 18 crop‑specific classes (19 classes if you count bare arable land separately), giving a total of 25 classes in the detailed (minor) dataset.# EUcropmap_LDA
+
+
+## License
+
+### Code
+All source code in this repository is released under the **MIT License**, unless stated otherwise.
+
+### Data
+This project uses a **preprocessed tabular dataset released with the paper**:
+
+> *European Union crop map 2022: Earth observation’s 10-meter dive into Europe’s crop tapestry*
+
+The dataset is based on Sentinel-1, Sentinel-2, and LUCAS 2022 in-situ observations and is **licensed by the original authors under the Creative Commons Attribution–NonCommercial–NoDerivatives 4.0 International (CC BY-NC-ND 4.0) license**.
+
