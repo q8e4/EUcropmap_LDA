@@ -6,3 +6,6 @@ datasets/
 # Large datasets
 datasets/
 *.csv
+
+# Ignore virtual environment directory
+.venv/
